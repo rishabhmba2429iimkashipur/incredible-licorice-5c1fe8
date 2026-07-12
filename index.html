@@ -7,6 +7,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Site DPR">
     <title>Daily Progress Report - Site Data Collection</title>
+
+    <!-- Firebase SDK (compat build, works with plain JS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-firestore-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.7.1/firebase-storage-compat.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -25,6 +32,7 @@
             max-width: 600px;
             margin: 0 auto;
             background: white;
+            min-height: 100vh;
         }
 
         header {
@@ -33,6 +41,7 @@
             padding: 20px;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         header h1 {
@@ -43,6 +52,23 @@
         header p {
             font-size: 12px;
             opacity: 0.9;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 15px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.25);
         }
 
         .nav-tabs {
@@ -106,6 +132,8 @@
         input[type="text"],
         input[type="date"],
         input[type="number"],
+        input[type="email"],
+        input[type="password"],
         select,
         textarea {
             width: 100%;
@@ -121,9 +149,7 @@
             min-height: 80px;
         }
 
-        input[type="text"]:focus,
-        input[type="date"]:focus,
-        input[type="number"]:focus,
+        input:focus,
         select:focus,
         textarea:focus {
             outline: none;
@@ -135,10 +161,6 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
-        }
-
-        .row-full {
-            grid-column: 1 / -1;
         }
 
         table {
@@ -193,6 +215,13 @@
             background: #c0392b;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .btn-secondary {
@@ -278,22 +307,16 @@
             font-size: 13px;
         }
 
-        .alert-success {
-            background: #d5f4e6;
-            color: #27ae60;
-            border: 1px solid #27ae60;
-        }
-
         .alert-info {
             background: #d6eaf8;
             color: #2980b9;
             border: 1px solid #2980b9;
         }
 
-        .alert-warning {
-            background: #fef5e7;
-            color: #d68910;
-            border: 1px solid #d68910;
+        .alert-error {
+            background: #fdedec;
+            color: #c0392b;
+            border: 1px solid #c0392b;
         }
 
         .section-header {
@@ -306,7 +329,7 @@
         }
 
         .records-list {
-            max-height: 400px;
+            max-height: 600px;
             overflow-y: auto;
         }
 
@@ -357,25 +380,10 @@
             color: white;
         }
 
-        .btn-download:hover {
-            background: #229954;
-        }
-
-        .btn-delete:hover {
-            background: #c0392b;
-        }
-
         .empty-state {
             text-align: center;
             padding: 40px 20px;
             color: #7f8c8d;
-        }
-
-        .empty-state svg {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 15px;
-            opacity: 0.5;
         }
 
         .sync-status {
@@ -388,6 +396,11 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .sync-status.error {
+            background: #fdedec;
+            color: #c0392b;
         }
 
         .sync-indicator {
@@ -415,19 +428,59 @@
             font-weight: 600;
         }
 
-        .add-row-btn:hover {
-            background: #2980b9;
+        .upload-progress {
+            font-size: 12px;
+            color: #2980b9;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* LOGIN SCREEN */
+        #loginScreen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .login-box {
+            max-width: 380px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo h1 {
+            font-size: 26px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .login-logo p {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        #loginError {
+            display: none;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         @media (max-width: 600px) {
             .row {
                 grid-template-columns: 1fr;
             }
-            
             table {
                 font-size: 12px;
             }
-
             table th, table td {
                 padding: 8px;
             }
@@ -435,10 +488,45 @@
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">
+                <h1>📋 Site DPR</h1>
+                <p>Brickvriksh Engineers - Sign in to continue</p>
+            </div>
+
+            <div id="loginError" class="alert alert-error"></div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="loginEmail" placeholder="you@brickvriksh.com" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+            </div>
+
+            <button class="btn btn-primary" id="loginBtn" onclick="doLogin()">Sign In</button>
+
+            <div id="loginStatus" class="sync-status" style="margin-top: 15px;">
+                <div class="sync-indicator"></div>
+                <span id="loginStatusText">Checking Firebase connection...</span>
+            </div>
+
+            <div class="alert alert-info" style="margin-top: 20px;">
+                <strong>No account?</strong> Ask your admin to add your email in Firebase Console → Authentication → Users. Self-signup is disabled for security.
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP (hidden until logged in) -->
+    <div class="container hidden" id="appContainer">
         <header>
             <h1>📋 Daily Progress Report</h1>
             <p>Brickvriksh Engineers - Site Data Collection</p>
+            <button class="logout-btn" onclick="doLogout()">Logout</button>
         </header>
 
         <div class="nav-tabs">
@@ -450,8 +538,13 @@
         <!-- NEW REPORT TAB -->
         <div id="form" class="tab-content active">
             <div class="content">
+
+                <div id="connectionStatus" class="sync-status">
+                    <div class="sync-indicator"></div>
+                    <span id="connectionStatusText">Connected</span>
+                </div>
+
                 <form id="dprForm" onsubmit="saveDPR(event)">
-                    <!-- PROJECT INFO -->
                     <div class="section-header">Project Information</div>
                     
                     <div class="form-group">
@@ -476,7 +569,6 @@
                         </div>
                     </div>
 
-                    <!-- WORK COMPLETED -->
                     <div class="section-header">Work Completed</div>
                     
                     <div class="form-group">
@@ -498,18 +590,31 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><input type="text" placeholder="e.g., Foundation"></td>
-                                    <td><input type="number" step="0.1"></td>
-                                    <td><input type="number" step="0.1"></td>
-                                    <td><input type="number" step="0.1"></td>
-                                    <td><input type="text" placeholder="m/ft"></td>
+                                    <td>
+                                        <select class="dim-desc-select" onchange="toggleOtherInput(this)">
+                                            <option value="">Select...</option>
+                                            <option value="Foundations">Foundations</option>
+                                            <option value="Plinth beam">Plinth beam</option>
+                                            <option value="GF Columns">GF Columns</option>
+                                            <option value="Staircase">Staircase</option>
+                                            <option value="1st Slab">1st Slab</option>
+                                            <option value="1st F columns">1st F columns</option>
+                                            <option value="FF Staircase">FF Staircase</option>
+                                            <option value="2nd Slab">2nd Slab</option>
+                                            <option value="Other">Other (type manually)</option>
+                                        </select>
+                                        <input type="text" class="dim-desc-other hidden" placeholder="Enter description" style="margin-top:6px;">
+                                    </td>
+                                    <td><input type="number" step="0.1" class="dim-length"></td>
+                                    <td><input type="number" step="0.1" class="dim-width"></td>
+                                    <td><input type="number" step="0.1" class="dim-height"></td>
+                                    <td><input type="text" placeholder="m/ft" class="dim-unit"></td>
                                 </tr>
                             </tbody>
                         </table>
                         <button type="button" class="add-row-btn" onclick="addDimensionRow()">+ Add Row</button>
                     </div>
 
-                    <!-- MATERIALS -->
                     <div class="section-header">Materials</div>
                     
                     <div class="row">
@@ -546,7 +651,6 @@
                         <button type="button" class="add-row-btn" onclick="addMaterialRow()">+ Add Row</button>
                     </div>
 
-                    <!-- MANPOWER -->
                     <div class="section-header">Manpower</div>
                     
                     <div>
@@ -572,7 +676,6 @@
                         <button type="button" class="add-row-btn" onclick="addManpowerRow()">+ Add Row</button>
                     </div>
 
-                    <!-- SCHEDULE & REMARKS -->
                     <div class="section-header">Schedule & Remarks</div>
                     
                     <div class="form-group">
@@ -585,7 +688,6 @@
                         <textarea name="remarks" placeholder="Any other observations or issues..."></textarea>
                     </div>
 
-                    <!-- PHOTOS -->
                     <div class="section-header">Site Photos</div>
                     
                     <div class="photo-section">
@@ -595,9 +697,13 @@
                         <div id="photoGallery" class="photo-gallery"></div>
                     </div>
 
-                    <!-- SITE STAFF -->
                     <div class="section-header">Site Staff</div>
                     
+                    <div class="form-group">
+                        <label>Employee Name (filling this report) *</label>
+                        <input type="text" name="employeeName" required placeholder="Your name">
+                    </div>
+
                     <div class="row">
                         <div class="form-group">
                             <label>Site In-Charge</label>
@@ -609,8 +715,8 @@
                         </div>
                     </div>
 
-                    <!-- SUBMIT -->
-                    <button type="submit" class="btn btn-primary">💾 Save Report</button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary">☁️ Save & Upload Report</button>
+                    <div id="uploadProgress" class="upload-progress"></div>
                 </form>
             </div>
         </div>
@@ -618,9 +724,9 @@
         <!-- RECORDS TAB -->
         <div id="records" class="tab-content">
             <div class="content">
-                <div class="sync-status">
+                <div id="recordsSyncStatus" class="sync-status">
                     <div class="sync-indicator"></div>
-                    <span>Data saved locally. Export to sync with cloud.</span>
+                    <span>Loading records from cloud...</span>
                 </div>
 
                 <div id="recordsList" class="records-list"></div>
@@ -630,6 +736,9 @@
         <!-- SETTINGS TAB -->
         <div id="settings" class="tab-content">
             <div class="content">
+                <div class="section-header">Account</div>
+                <div id="accountInfo" style="font-size: 13px; color: #555; margin-bottom: 15px;"></div>
+
                 <div class="section-header">Data Management</div>
                 
                 <div class="form-group">
@@ -640,37 +749,25 @@
                     <button class="btn btn-secondary" onclick="exportAsCSV()">📊 Export as CSV</button>
                 </div>
 
-                <div class="form-group">
-                    <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Clear All Data</button>
+                <div class="section-header">Firebase Status</div>
+                <div id="settingsFirebaseStatus" style="font-size: 13px; line-height: 1.6; color: #555; margin-bottom: 15px;">
+                    Checking...
                 </div>
 
                 <div class="section-header">Instructions</div>
                 
                 <div style="font-size: 13px; line-height: 1.6; color: #555;">
-                    <p style="margin-bottom: 10px;"><strong>How to Use:</strong></p>
+                    <p style="margin-bottom: 10px;"><strong>Adding a new team member:</strong></p>
                     <ul style="margin-left: 20px; margin-bottom: 15px;">
-                        <li>Fill in project information and work details</li>
-                        <li>Capture site photos using your device camera</li>
-                        <li>Add multiple rows for dimensions, materials, and manpower as needed</li>
-                        <li>Save the report - it's stored on your device</li>
-                        <li>Export data periodically to backup and sync with cloud</li>
+                        <li>Go to Firebase Console → Authentication → Users → Add user</li>
+                        <li>Enter their email and a temporary password</li>
+                        <li>Share the login details with them securely</li>
                     </ul>
-
-                    <p style="margin-bottom: 10px;"><strong>To Sync to Cloud:</strong></p>
-                    <ul style="margin-left: 20px;">
-                        <li>Export data as JSON or CSV</li>
-                        <li>Upload the file to Google Drive or Dropbox from your device</li>
-                        <li>Or email exported reports to project stakeholders</li>
-                    </ul>
-                </div>
-
-                <div class="alert alert-info" style="margin-top: 20px;">
-                    <strong>💡 Tip:</strong> Install this app on your home screen for quick access. No internet needed on site!
                 </div>
 
                 <div style="font-size: 12px; color: #95a5a6; margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 4px;">
-                    <p><strong>Version:</strong> 1.0.0</p>
-                    <p><strong>Storage:</strong> Local Device Storage</p>
+                    <p><strong>Version:</strong> 2.1.0 (Firebase + Auth)</p>
+                    <p><strong>Storage:</strong> Firebase Firestore + Storage</p>
                     <p><strong>Developer:</strong> Brickvriksh Engineers</p>
                 </div>
             </div>
@@ -678,41 +775,223 @@
     </div>
 
     <script>
-        // Initialize date to today
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.querySelector('input[name="date"]');
-            dateInput.valueAsDate = new Date();
-            loadRecords();
-        });
+        // ============================================================
+        // FIREBASE CONFIGURATION — PASTE YOUR CONFIG FROM THE FIREBASE
+        // CONSOLE HERE (Project Settings -> General -> Your apps -> Web app)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyArkCcLxlNohCnpJOKa7g214yQXcUjHsRQ",
+            authDomain: "brickvriksh.firebaseapp.com",
+            projectId: "brickvriksh",
+            storageBucket: "brickvriksh.firebasestorage.app",
+            messagingSenderId: "760643685585",
+            appId: "1:760643685585:web:10fbf6c4494292665189f0"
+        };
+        // ============================================================
 
-        // TAB SWITCHING
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+        let auth = null;
+        let db = null;
+        let storage = null;
+        let firebaseReady = false;
+        let currentUser = null;
+
+        try {
+            if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "PASTE_YOUR_API_KEY_HERE") {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
+                storage = firebase.storage();
+                firebaseReady = true;
+            }
+        } catch (err) {
+            console.error("Firebase init error:", err);
+            firebaseReady = false;
         }
 
-        // DIMENSION TABLE
+        function setLoginStatus(text, isError) {
+            const statusEl = document.getElementById('loginStatus');
+            const textEl = document.getElementById('loginStatusText');
+            statusEl.className = isError ? 'sync-status error' : 'sync-status';
+            textEl.textContent = text;
+        }
+
+        function showLoginError(msg) {
+            const el = document.getElementById('loginError');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function hideLoginError() {
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        async function doLogin() {
+            if (!firebaseReady) {
+                showLoginError('Firebase is not configured yet. Edit firebaseConfig in the code.');
+                return;
+            }
+            hideLoginError();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            if (!email || !password) {
+                showLoginError('Enter both email and password.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Signing in...';
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                // onAuthStateChanged handles the rest
+            } catch (err) {
+                console.error('Login error:', err);
+                let msg = 'Login failed. Check your email and password.';
+                if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                    msg = 'No account found for that email, or password is wrong.';
+                } else if (err.code === 'auth/wrong-password') {
+                    msg = 'Incorrect password.';
+                } else if (err.code === 'auth/invalid-email') {
+                    msg = 'That email address looks invalid.';
+                } else if (err.code === 'auth/too-many-requests') {
+                    msg = 'Too many attempts. Try again later.';
+                }
+                showLoginError(msg);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        }
+
+        function doLogout() {
+            if (auth) auth.signOut();
+        }
+
+        function showApp(user) {
+            currentUser = user;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('accountInfo').innerHTML = `Signed in as <strong>${user.email}</strong>`;
+            updateConnectionUI();
+            loadRecords();
+        }
+
+        function showLogin() {
+            currentUser = null;
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        if (firebaseReady) {
+            setLoginStatus('Connected. Enter your credentials to sign in.', false);
+            auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    showApp(user);
+                } else {
+                    showLogin();
+                }
+            });
+        } else {
+            setLoginStatus('Firebase not configured. Edit firebaseConfig in the code to enable login.', true);
+            document.getElementById('loginBtn').disabled = true;
+        }
+
+        function updateConnectionUI() {
+            const statusEl = document.getElementById('connectionStatus');
+            const textEl = document.getElementById('connectionStatusText');
+            const settingsEl = document.getElementById('settingsFirebaseStatus');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (firebaseReady) {
+                statusEl.className = 'sync-status';
+                textEl.textContent = 'Connected to Firebase. Reports upload directly to the cloud.';
+                settingsEl.innerHTML = '<p style="color:#27ae60;"><strong>✅ Connected</strong> — reports and photos are uploading to your Firebase project.</p>';
+                submitBtn.disabled = false;
+            } else {
+                statusEl.className = 'sync-status error';
+                textEl.textContent = 'Firebase not configured.';
+                settingsEl.innerHTML = '<p style="color:#c0392b;"><strong>⚠️ Not connected</strong> — paste your Firebase config into the script section near the top of the file.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.querySelector('input[name="date"]');
+            if (dateInput) dateInput.valueAsDate = new Date();
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            if (tabName === 'records') loadRecords();
+        }
+
         function addDimensionRow() {
             const tbody = document.querySelector('#dimensionTable tbody');
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><input type="text" placeholder="Description"></td>
-                <td><input type="number" step="0.1"></td>
-                <td><input type="number" step="0.1"></td>
-                <td><input type="number" step="0.1"></td>
-                <td><input type="text" placeholder="m/ft"></td>
+                <td>
+                    <select class="dim-desc-select" onchange="toggleOtherInput(this)">
+                        <option value="">Select...</option>
+                        <option value="Foundations">Foundations</option>
+                        <option value="Plinth beam">Plinth beam</option>
+                        <option value="GF Columns">GF Columns</option>
+                        <option value="Staircase">Staircase</option>
+                        <option value="1st Slab">1st Slab</option>
+                        <option value="1st F columns">1st F columns</option>
+                        <option value="FF Staircase">FF Staircase</option>
+                        <option value="2nd Slab">2nd Slab</option>
+                        <option value="Other">Other (type manually)</option>
+                    </select>
+                    <input type="text" class="dim-desc-other hidden" placeholder="Enter description" style="margin-top:6px;">
+                </td>
+                <td><input type="number" step="0.1" class="dim-length"></td>
+                <td><input type="number" step="0.1" class="dim-width"></td>
+                <td><input type="number" step="0.1" class="dim-height"></td>
+                <td><input type="text" placeholder="m/ft" class="dim-unit"></td>
             `;
             tbody.appendChild(row);
         }
 
-        // MATERIALS TABLE
+        function toggleOtherInput(selectEl) {
+            const otherInput = selectEl.parentElement.querySelector('.dim-desc-other');
+            if (selectEl.value === 'Other') {
+                otherInput.classList.remove('hidden');
+                otherInput.focus();
+            } else {
+                otherInput.classList.add('hidden');
+                otherInput.value = '';
+            }
+        }
+
+        function getDimensionDescription(row) {
+            const select = row.querySelector('.dim-desc-select');
+            const otherInput = row.querySelector('.dim-desc-other');
+            if (select.value === 'Other') return otherInput.value.trim();
+            return select.value;
+        }
+
+        function extractDimensionData() {
+            const rows = [];
+            const tbody = document.querySelector('#dimensionTable tbody');
+            tbody.querySelectorAll('tr').forEach(row => {
+                const desc = getDimensionDescription(row);
+                const length = row.querySelector('.dim-length').value;
+                const width = row.querySelector('.dim-width').value;
+                const height = row.querySelector('.dim-height').value;
+                const unit = row.querySelector('.dim-unit').value;
+                if (desc || length || width || height || unit.trim()) {
+                    rows.push([desc, length, width, height, unit]);
+                }
+            });
+            return rows;
+        }
+
         function addMaterialRow() {
             const tbody = document.querySelector('#materialsTable tbody');
             const row = document.createElement('tr');
@@ -725,7 +1004,6 @@
             tbody.appendChild(row);
         }
 
-        // MANPOWER TABLE
         function addManpowerRow() {
             const tbody = document.querySelector('#manpowerTable tbody');
             const row = document.createElement('tr');
@@ -738,7 +1016,6 @@
             tbody.appendChild(row);
         }
 
-        // PHOTO HANDLING
         let capturedPhotos = [];
 
         function handlePhotoSelect(event) {
@@ -746,10 +1023,7 @@
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    capturedPhotos.push({
-                        data: e.target.result,
-                        name: file.name
-                    });
+                    capturedPhotos.push({ file: file, dataUrl: e.target.result, name: file.name });
                     displayPhotos();
                 };
                 reader.readAsDataURL(file);
@@ -763,7 +1037,7 @@
                 const photoItem = document.createElement('div');
                 photoItem.className = 'photo-item';
                 photoItem.innerHTML = `
-                    <img src="${photo.data}" alt="Site photo">
+                    <img src="${photo.dataUrl}" alt="Site photo">
                     <button type="button" class="remove-btn" onclick="removePhoto(${index})">×</button>
                 `;
                 gallery.appendChild(photoItem);
@@ -775,111 +1049,172 @@
             displayPhotos();
         }
 
-        // FORM SUBMISSION
-        function saveDPR(event) {
+        // Photos are NOT uploaded to cloud storage (requires Firebase's paid plan).
+        // Instead, they're packaged into a local JSON backup file the user can
+        // download and share manually (WhatsApp/email/Drive) if needed.
+        function downloadPhotosLocally(reportId, projectName, date) {
+            const photoBackup = {
+                reportId: reportId,
+                projectName: projectName,
+                date: date,
+                photos: capturedPhotos.map(p => ({ name: p.name, dataUrl: p.dataUrl }))
+            };
+            const dataStr = JSON.stringify(photoBackup, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `DPR_Photos_${projectName}_${date}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function saveDPR(event) {
             event.preventDefault();
 
-            const formData = new FormData(event.target);
-            const dprData = {
-                id: Date.now(),
-                timestamp: new Date().toLocaleString(),
-                projectName: formData.get('projectName'),
-                date: formData.get('date'),
-                weather: formData.get('weather'),
-                workDescription: formData.get('workDescription'),
-                cementConsumed: formData.get('cementConsumed'),
-                cementRemaining: formData.get('cementRemaining'),
-                nextDayActivity: formData.get('nextDayActivity'),
-                remarks: formData.get('remarks'),
-                siteInCharge: formData.get('siteInCharge'),
-                projectEngineer: formData.get('projectEngineer'),
-                photos: capturedPhotos,
-                dimensions: extractTableData('#dimensionTable'),
-                materials: extractTableData('#materialsTable'),
-                manpower: extractTableData('#manpowerTable')
-            };
+            if (!firebaseReady || !currentUser) {
+                alert('⚠️ You must be signed in and Firebase must be configured to save a report.');
+                return;
+            }
 
-            // Save to localStorage
-            let records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-            records.push(dprData);
-            localStorage.setItem('dprRecords', JSON.stringify(records));
+            const submitBtn = document.getElementById('submitBtn');
+            const progressEl = document.getElementById('uploadProgress');
+            submitBtn.disabled = true;
 
-            // Show success message
-            alert('✅ Report saved successfully!');
-            
-            // Reset form
-            event.target.reset();
-            capturedPhotos = [];
-            displayPhotos();
-            document.querySelector('input[name="date"]').valueAsDate = new Date();
-            
-            // Load records
-            loadRecords();
+            try {
+                const formData = new FormData(event.target);
+                const reportId = Date.now().toString();
+                const projectNameVal = formData.get('projectName');
+                const dateVal = formData.get('date');
+
+                progressEl.textContent = 'Saving report...';
+
+                const dprData = {
+                    id: reportId,
+                    timestamp: new Date().toISOString(),
+                    submittedBy: currentUser.email,
+                    employeeName: formData.get('employeeName'),
+                    projectName: formData.get('projectName'),
+                    date: formData.get('date'),
+                    weather: formData.get('weather'),
+                    workDescription: formData.get('workDescription'),
+                    cementConsumed: formData.get('cementConsumed'),
+                    cementRemaining: formData.get('cementRemaining'),
+                    nextDayActivity: formData.get('nextDayActivity'),
+                    remarks: formData.get('remarks'),
+                    siteInCharge: formData.get('siteInCharge'),
+                    projectEngineer: formData.get('projectEngineer'),
+                    photoCount: capturedPhotos.length,
+                    dimensions: extractDimensionData(),
+                    materials: extractTableData('#materialsTable'),
+                    manpower: extractTableData('#manpowerTable')
+                };
+
+                progressEl.textContent = 'Saving report data...';
+                await db.collection('dprRecords').doc(reportId).set(dprData);
+
+                progressEl.textContent = '';
+
+                if (capturedPhotos.length > 0) {
+                    downloadPhotosLocally(reportId, projectNameVal, dateVal);
+                    alert('✅ Report saved to cloud! A photo backup file was also downloaded to your device \u2014 share it manually if needed (photos aren\'t uploaded to the cloud).');
+                } else {
+                    alert('✅ Report saved successfully!');
+                }
+
+                event.target.reset();
+                capturedPhotos = [];
+                displayPhotos();
+                document.querySelector('input[name="date"]').valueAsDate = new Date();
+
+                loadRecords();
+            } catch (err) {
+                console.error('Save error:', err);
+                progressEl.textContent = '';
+                alert('❌ Upload failed: ' + err.message);
+            } finally {
+                submitBtn.disabled = false;
+            }
         }
 
         function extractTableData(tableSelector) {
             const rows = [];
             const tbody = document.querySelector(`${tableSelector} tbody`);
-            
             tbody.querySelectorAll('tr').forEach(row => {
                 const inputs = row.querySelectorAll('input');
                 const rowData = Array.from(inputs).map(input => input.value);
-                if (rowData.some(val => val.trim())) {
-                    rows.push(rowData);
-                }
+                if (rowData.some(val => val.trim())) rows.push(rowData);
             });
-            
             return rows;
         }
 
-        // RECORDS MANAGEMENT
-        function loadRecords() {
-            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-            const recordsList = document.getElementById('recordsList');
+        let cachedRecords = [];
 
-            if (records.length === 0) {
-                recordsList.innerHTML = `
-                    <div class="empty-state">
-                        <p>No reports yet</p>
-                        <p style="font-size: 12px; margin-top: 10px;">Start by creating a new report</p>
-                    </div>
-                `;
+        async function loadRecords() {
+            const recordsList = document.getElementById('recordsList');
+            const statusEl = document.getElementById('recordsSyncStatus');
+
+            if (!firebaseReady || !currentUser) {
+                statusEl.className = 'sync-status error';
+                statusEl.innerHTML = '<div class="sync-indicator"></div><span>Sign in to view reports.</span>';
+                recordsList.innerHTML = '<div class="empty-state"><p>Sign in to see reports here.</p></div>';
                 return;
             }
 
-            recordsList.innerHTML = records.reverse().map(record => `
-                <div class="record-item">
-                    <strong>${record.projectName}</strong>
-                    <div class="meta">
-                        📅 ${record.date} | 🌤️ ${record.weather}
+            statusEl.className = 'sync-status';
+            statusEl.innerHTML = '<div class="sync-indicator"></div><span>Loading records from cloud...</span>';
+
+            try {
+                const snapshot = await db.collection('dprRecords').orderBy('timestamp', 'desc').get();
+                cachedRecords = snapshot.docs.map(doc => doc.data());
+
+                statusEl.innerHTML = `<div class="sync-indicator"></div><span>${cachedRecords.length} report(s) synced from cloud.</span>`;
+
+                if (cachedRecords.length === 0) {
+                    recordsList.innerHTML = `
+                        <div class="empty-state">
+                            <p>No reports yet</p>
+                            <p style="font-size: 12px; margin-top: 10px;">Start by creating a new report</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                recordsList.innerHTML = cachedRecords.map(record => `
+                    <div class="record-item">
+                        <strong>${record.projectName}</strong>
+                        <div class="meta">
+                            📅 ${record.date} | 🌤️ ${record.weather} ${record.employeeName ? `| 👤 ${record.employeeName}` : ''}
+                        </div>
+                        <div style="color: #555;">
+                            ${record.workDescription ? `<p>Work: ${record.workDescription.substring(0, 80)}...</p>` : ''}
+                            ${record.photoCount > 0 ? `<p>📷 ${record.photoCount} photos (saved locally on submitter's device, not in cloud)</p>` : ''}
+                        </div>
+                        <div class="record-actions">
+                            <button class="btn-download" onclick="viewRecord('${record.id}')">View</button>
+                            <button class="btn-download" onclick="downloadRecord('${record.id}')">Download</button>
+                            <button class="btn-delete" onclick="deleteRecord('${record.id}')">Delete</button>
+                        </div>
                     </div>
-                    <div style="color: #555;">
-                        ${record.workDescription ? `<p>Work: ${record.workDescription.substring(0, 80)}...</p>` : ''}
-                        ${record.photos.length > 0 ? `<p>📷 ${record.photos.length} photos</p>` : ''}
-                    </div>
-                    <div class="record-actions">
-                        <button class="btn-download" onclick="viewRecord(${record.id})">View</button>
-                        <button class="btn-download" onclick="downloadRecord(${record.id})">Download</button>
-                        <button class="btn-delete" onclick="deleteRecord(${record.id})">Delete</button>
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (err) {
+                console.error('Load error:', err);
+                statusEl.className = 'sync-status error';
+                statusEl.innerHTML = `<div class="sync-indicator"></div><span>Failed to load: ${err.message}</span>`;
+            }
         }
 
         function viewRecord(id) {
-            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-            const record = records.find(r => r.id === id);
-            
+            const record = cachedRecords.find(r => r.id === id);
             if (record) {
-                // Create detailed view (could be expanded)
-                alert(`Project: ${record.projectName}\nDate: ${record.date}\nWeather: ${record.weather}\nPhotos: ${record.photos.length}\n\nSaved at: ${record.timestamp}`);
+                const photoNote = record.photoCount > 0 ? `${record.photoCount} photo(s) \u2014 saved locally on submitter's device only, not in cloud` : 'None';
+                alert(`Project: ${record.projectName}\nDate: ${record.date}\nWeather: ${record.weather}\nEmployee: ${record.employeeName || 'n/a'}\nBy (login): ${record.submittedBy || 'n/a'}\nSaved at: ${record.timestamp}\n\nPhotos: ${photoNote}`);
             }
         }
 
         function downloadRecord(id) {
-            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-            const record = records.find(r => r.id === id);
-            
+            const record = cachedRecords.find(r => r.id === id);
             if (record) {
                 const dataStr = JSON.stringify(record, null, 2);
                 const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -893,24 +1228,22 @@
             }
         }
 
-        function deleteRecord(id) {
-            if (confirm('Are you sure you want to delete this record?')) {
-                let records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-                records = records.filter(r => r.id !== id);
-                localStorage.setItem('dprRecords', JSON.stringify(records));
+        async function deleteRecord(id) {
+            if (!confirm('Are you sure you want to delete this record from the cloud?')) return;
+            try {
+                await db.collection('dprRecords').doc(id).delete();
                 loadRecords();
+            } catch (err) {
+                alert('❌ Delete failed: ' + err.message);
             }
         }
 
         function exportAllData() {
-            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-            
-            if (records.length === 0) {
-                alert('No data to export');
+            if (cachedRecords.length === 0) {
+                alert('No data to export. Open the Records tab first to load reports.');
                 return;
             }
-
-            const dataStr = JSON.stringify(records, null, 2);
+            const dataStr = JSON.stringify(cachedRecords, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
@@ -919,34 +1252,29 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            alert(`✅ Exported ${records.length} reports`);
+            alert(`✅ Exported ${cachedRecords.length} reports`);
         }
 
         function exportAsCSV() {
-            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
-            
-            if (records.length === 0) {
-                alert('No data to export');
+            if (cachedRecords.length === 0) {
+                alert('No data to export. Open the Records tab first to load reports.');
                 return;
             }
-
-            let csv = 'Project Name,Date,Weather,Work Description,Cement Consumed,Cement Remaining,Saved At,Photos\n';
-            
-            records.forEach(record => {
+            let csv = 'Project Name,Date,Weather,Submitted By,Work Description,Cement Consumed,Cement Remaining,Saved At,Photos\n';
+            cachedRecords.forEach(record => {
                 const row = [
                     record.projectName,
                     record.date,
                     record.weather,
-                    `"${record.workDescription}"`,
+                    record.submittedBy || '',
+                    `"${(record.workDescription || '').replace(/"/g, '""')}"`,
                     record.cementConsumed || '',
                     record.cementRemaining || '',
                     record.timestamp,
-                    record.photos.length
+                    record.photoCount || 0
                 ].join(',');
                 csv += row + '\n';
             });
-
             const dataBlob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
@@ -955,22 +1283,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             alert(`✅ Exported as CSV`);
-        }
-
-        function clearAllData() {
-            if (confirm('⚠️ This will delete ALL saved reports. Are you sure? (Consider exporting first)')) {
-                localStorage.removeItem('dprRecords');
-                loadRecords();
-                alert('All data cleared');
-            }
-        }
-
-        // SERVICE WORKER for offline capability (optional)
-        if ('serviceWorker' in navigator) {
-            // Service worker registration would go here for full offline capability
-            console.log('Service worker ready for offline functionality');
         }
     </script>
 </body>
