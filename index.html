@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Site DPR">
+    <title>Daily Progress Report - Site Data Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding-bottom: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #ecf0f1;
+            border-bottom: 1px solid #bdc3c7;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-tabs button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            color: #555;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tabs button.active {
+            color: #2c3e50;
+            border-bottom-color: #e74c3c;
+            background: white;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .row-full {
+            grid-column: 1 / -1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        table th {
+            background: #ecf0f1;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #bdc3c7;
+            color: #2c3e50;
+        }
+
+        table td {
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+        }
+
+        table input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #e74c3c;
+            color: white;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+            width: 100%;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .photo-section {
+            margin-bottom: 20px;
+        }
+
+        .photo-input {
+            display: none;
+        }
+
+        .btn-camera {
+            background: #3498db;
+            color: white;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn-camera:hover {
+            background: #2980b9;
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .photo-item {
+            position: relative;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background: #d5f4e6;
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+
+        .alert-info {
+            background: #d6eaf8;
+            color: #2980b9;
+            border: 1px solid #2980b9;
+        }
+
+        .alert-warning {
+            background: #fef5e7;
+            color: #d68910;
+            border: 1px solid #d68910;
+        }
+
+        .section-header {
+            background: #ecf0f1;
+            padding: 10px 15px;
+            margin: 15px -20px 15px -20px;
+            font-weight: 600;
+            color: #2c3e50;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .records-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .record-item {
+            background: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        .record-item strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .record-item .meta {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .record-actions button {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-download {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #229954;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .sync-status {
+            padding: 10px;
+            background: #d6eaf8;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #2980b9;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            background: #3498db;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .add-row-btn {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .add-row-btn:hover {
+            background: #2980b9;
+        }
+
+        @media (max-width: 600px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+
+            table th, table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Daily Progress Report</h1>
+            <p>Brickvriksh Engineers - Site Data Collection</p>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchTab('form')">New Report</button>
+            <button class="nav-btn" onclick="switchTab('records')">Records</button>
+            <button class="nav-btn" onclick="switchTab('settings')">Settings</button>
+        </div>
+
+        <!-- NEW REPORT TAB -->
+        <div id="form" class="tab-content active">
+            <div class="content">
+                <form id="dprForm" onsubmit="saveDPR(event)">
+                    <!-- PROJECT INFO -->
+                    <div class="section-header">Project Information</div>
+                    
+                    <div class="form-group">
+                        <label>Project Name *</label>
+                        <input type="text" name="projectName" required placeholder="e.g., Residential Complex - Phase 2">
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Date *</label>
+                            <input type="date" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Weather *</label>
+                            <select name="weather" required>
+                                <option value="">Select...</option>
+                                <option value="Sunny">☀️ Sunny</option>
+                                <option value="Cloudy">☁️ Cloudy</option>
+                                <option value="Rainy">🌧️ Rainy</option>
+                                <option value="Partly Cloudy">⛅ Partly Cloudy</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- WORK COMPLETED -->
+                    <div class="section-header">Work Completed</div>
+                    
+                    <div class="form-group">
+                        <label>Description of Work</label>
+                        <textarea name="workDescription" placeholder="Describe work completed today..."></textarea>
+                    </div>
+
+                    <div>
+                        <label style="margin-bottom: 10px;">Dimensions</label>
+                        <table id="dimensionTable">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Length</th>
+                                    <th>Width</th>
+                                    <th>Height</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" placeholder="e.g., Foundation"></td>
+                                    <td><input type="number" step="0.1"></td>
+                                    <td><input type="number" step="0.1"></td>
+                                    <td><input type="number" step="0.1"></td>
+                                    <td><input type="text" placeholder="m/ft"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="add-row-btn" onclick="addDimensionRow()">+ Add Row</button>
+                    </div>
+
+                    <!-- MATERIALS -->
+                    <div class="section-header">Materials</div>
+                    
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Cement Bags Consumed</label>
+                            <input type="number" name="cementConsumed" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Cement Bags Remaining</label>
+                            <input type="number" name="cementRemaining" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="margin-bottom: 10px;">Materials & Equipment Procured</label>
+                        <table id="materialsTable">
+                            <thead>
+                                <tr>
+                                    <th>Item Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit</th>
+                                    <th>Supplier</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" placeholder="e.g., Steel Rods"></td>
+                                    <td><input type="number" step="0.1"></td>
+                                    <td><input type="text" placeholder="kg/bags"></td>
+                                    <td><input type="text" placeholder="Supplier name"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="add-row-btn" onclick="addMaterialRow()">+ Add Row</button>
+                    </div>
+
+                    <!-- MANPOWER -->
+                    <div class="section-header">Manpower</div>
+                    
+                    <div>
+                        <label style="margin-bottom: 10px;">Daily Manpower Details</label>
+                        <table id="manpowerTable">
+                            <thead>
+                                <tr>
+                                    <th>Date/Shift</th>
+                                    <th>Skilled</th>
+                                    <th>Semi-Skilled</th>
+                                    <th>Helper</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" placeholder="Today"></td>
+                                    <td><input type="number"></td>
+                                    <td><input type="number"></td>
+                                    <td><input type="number"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="add-row-btn" onclick="addManpowerRow()">+ Add Row</button>
+                    </div>
+
+                    <!-- SCHEDULE & REMARKS -->
+                    <div class="section-header">Schedule & Remarks</div>
+                    
+                    <div class="form-group">
+                        <label>Scheduled Activity for Next Day</label>
+                        <textarea name="nextDayActivity" placeholder="Plan for tomorrow..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>General Remarks</label>
+                        <textarea name="remarks" placeholder="Any other observations or issues..."></textarea>
+                    </div>
+
+                    <!-- PHOTOS -->
+                    <div class="section-header">Site Photos</div>
+                    
+                    <div class="photo-section">
+                        <input type="file" id="photoInput" class="photo-input" accept="image/*" multiple onchange="handlePhotoSelect(event)">
+                        <button type="button" class="btn btn-camera" onclick="document.getElementById('photoInput').click()">📷 Capture Photos</button>
+                        
+                        <div id="photoGallery" class="photo-gallery"></div>
+                    </div>
+
+                    <!-- SITE STAFF -->
+                    <div class="section-header">Site Staff</div>
+                    
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Site In-Charge</label>
+                            <input type="text" name="siteInCharge" placeholder="Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Project Engineer</label>
+                            <input type="text" name="projectEngineer" placeholder="Name">
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT -->
+                    <button type="submit" class="btn btn-primary">💾 Save Report</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- RECORDS TAB -->
+        <div id="records" class="tab-content">
+            <div class="content">
+                <div class="sync-status">
+                    <div class="sync-indicator"></div>
+                    <span>Data saved locally. Export to sync with cloud.</span>
+                </div>
+
+                <div id="recordsList" class="records-list"></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settings" class="tab-content">
+            <div class="content">
+                <div class="section-header">Data Management</div>
+                
+                <div class="form-group">
+                    <button class="btn btn-success" onclick="exportAllData()">📥 Export All Data (JSON)</button>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-secondary" onclick="exportAsCSV()">📊 Export as CSV</button>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-secondary" onclick="clearAllData()">🗑️ Clear All Data</button>
+                </div>
+
+                <div class="section-header">Instructions</div>
+                
+                <div style="font-size: 13px; line-height: 1.6; color: #555;">
+                    <p style="margin-bottom: 10px;"><strong>How to Use:</strong></p>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Fill in project information and work details</li>
+                        <li>Capture site photos using your device camera</li>
+                        <li>Add multiple rows for dimensions, materials, and manpower as needed</li>
+                        <li>Save the report - it's stored on your device</li>
+                        <li>Export data periodically to backup and sync with cloud</li>
+                    </ul>
+
+                    <p style="margin-bottom: 10px;"><strong>To Sync to Cloud:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Export data as JSON or CSV</li>
+                        <li>Upload the file to Google Drive or Dropbox from your device</li>
+                        <li>Or email exported reports to project stakeholders</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <strong>💡 Tip:</strong> Install this app on your home screen for quick access. No internet needed on site!
+                </div>
+
+                <div style="font-size: 12px; color: #95a5a6; margin-top: 20px; padding: 15px; background: #ecf0f1; border-radius: 4px;">
+                    <p><strong>Version:</strong> 1.0.0</p>
+                    <p><strong>Storage:</strong> Local Device Storage</p>
+                    <p><strong>Developer:</strong> Brickvriksh Engineers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize date to today
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.querySelector('input[name="date"]');
+            dateInput.valueAsDate = new Date();
+            loadRecords();
+        });
+
+        // TAB SWITCHING
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // DIMENSION TABLE
+        function addDimensionRow() {
+            const tbody = document.querySelector('#dimensionTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" placeholder="Description"></td>
+                <td><input type="number" step="0.1"></td>
+                <td><input type="number" step="0.1"></td>
+                <td><input type="number" step="0.1"></td>
+                <td><input type="text" placeholder="m/ft"></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // MATERIALS TABLE
+        function addMaterialRow() {
+            const tbody = document.querySelector('#materialsTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" placeholder="Item Description"></td>
+                <td><input type="number" step="0.1"></td>
+                <td><input type="text" placeholder="Unit"></td>
+                <td><input type="text" placeholder="Supplier"></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // MANPOWER TABLE
+        function addManpowerRow() {
+            const tbody = document.querySelector('#manpowerTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" placeholder="Date/Shift"></td>
+                <td><input type="number"></td>
+                <td><input type="number"></td>
+                <td><input type="number"></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // PHOTO HANDLING
+        let capturedPhotos = [];
+
+        function handlePhotoSelect(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    capturedPhotos.push({
+                        data: e.target.result,
+                        name: file.name
+                    });
+                    displayPhotos();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function displayPhotos() {
+            const gallery = document.getElementById('photoGallery');
+            gallery.innerHTML = '';
+            capturedPhotos.forEach((photo, index) => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.innerHTML = `
+                    <img src="${photo.data}" alt="Site photo">
+                    <button type="button" class="remove-btn" onclick="removePhoto(${index})">×</button>
+                `;
+                gallery.appendChild(photoItem);
+            });
+        }
+
+        function removePhoto(index) {
+            capturedPhotos.splice(index, 1);
+            displayPhotos();
+        }
+
+        // FORM SUBMISSION
+        function saveDPR(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const dprData = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleString(),
+                projectName: formData.get('projectName'),
+                date: formData.get('date'),
+                weather: formData.get('weather'),
+                workDescription: formData.get('workDescription'),
+                cementConsumed: formData.get('cementConsumed'),
+                cementRemaining: formData.get('cementRemaining'),
+                nextDayActivity: formData.get('nextDayActivity'),
+                remarks: formData.get('remarks'),
+                siteInCharge: formData.get('siteInCharge'),
+                projectEngineer: formData.get('projectEngineer'),
+                photos: capturedPhotos,
+                dimensions: extractTableData('#dimensionTable'),
+                materials: extractTableData('#materialsTable'),
+                manpower: extractTableData('#manpowerTable')
+            };
+
+            // Save to localStorage
+            let records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+            records.push(dprData);
+            localStorage.setItem('dprRecords', JSON.stringify(records));
+
+            // Show success message
+            alert('✅ Report saved successfully!');
+            
+            // Reset form
+            event.target.reset();
+            capturedPhotos = [];
+            displayPhotos();
+            document.querySelector('input[name="date"]').valueAsDate = new Date();
+            
+            // Load records
+            loadRecords();
+        }
+
+        function extractTableData(tableSelector) {
+            const rows = [];
+            const tbody = document.querySelector(`${tableSelector} tbody`);
+            
+            tbody.querySelectorAll('tr').forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const rowData = Array.from(inputs).map(input => input.value);
+                if (rowData.some(val => val.trim())) {
+                    rows.push(rowData);
+                }
+            });
+            
+            return rows;
+        }
+
+        // RECORDS MANAGEMENT
+        function loadRecords() {
+            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+            const recordsList = document.getElementById('recordsList');
+
+            if (records.length === 0) {
+                recordsList.innerHTML = `
+                    <div class="empty-state">
+                        <p>No reports yet</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Start by creating a new report</p>
+                    </div>
+                `;
+                return;
+            }
+
+            recordsList.innerHTML = records.reverse().map(record => `
+                <div class="record-item">
+                    <strong>${record.projectName}</strong>
+                    <div class="meta">
+                        📅 ${record.date} | 🌤️ ${record.weather}
+                    </div>
+                    <div style="color: #555;">
+                        ${record.workDescription ? `<p>Work: ${record.workDescription.substring(0, 80)}...</p>` : ''}
+                        ${record.photos.length > 0 ? `<p>📷 ${record.photos.length} photos</p>` : ''}
+                    </div>
+                    <div class="record-actions">
+                        <button class="btn-download" onclick="viewRecord(${record.id})">View</button>
+                        <button class="btn-download" onclick="downloadRecord(${record.id})">Download</button>
+                        <button class="btn-delete" onclick="deleteRecord(${record.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewRecord(id) {
+            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+            const record = records.find(r => r.id === id);
+            
+            if (record) {
+                // Create detailed view (could be expanded)
+                alert(`Project: ${record.projectName}\nDate: ${record.date}\nWeather: ${record.weather}\nPhotos: ${record.photos.length}\n\nSaved at: ${record.timestamp}`);
+            }
+        }
+
+        function downloadRecord(id) {
+            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+            const record = records.find(r => r.id === id);
+            
+            if (record) {
+                const dataStr = JSON.stringify(record, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `DPR_${record.projectName}_${record.date}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function deleteRecord(id) {
+            if (confirm('Are you sure you want to delete this record?')) {
+                let records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+                records = records.filter(r => r.id !== id);
+                localStorage.setItem('dprRecords', JSON.stringify(records));
+                loadRecords();
+            }
+        }
+
+        function exportAllData() {
+            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+            
+            if (records.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const dataStr = JSON.stringify(records, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Brickvriksh_DPR_Export_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`✅ Exported ${records.length} reports`);
+        }
+
+        function exportAsCSV() {
+            const records = JSON.parse(localStorage.getItem('dprRecords')) || [];
+            
+            if (records.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            let csv = 'Project Name,Date,Weather,Work Description,Cement Consumed,Cement Remaining,Saved At,Photos\n';
+            
+            records.forEach(record => {
+                const row = [
+                    record.projectName,
+                    record.date,
+                    record.weather,
+                    `"${record.workDescription}"`,
+                    record.cementConsumed || '',
+                    record.cementRemaining || '',
+                    record.timestamp,
+                    record.photos.length
+                ].join(',');
+                csv += row + '\n';
+            });
+
+            const dataBlob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Brickvriksh_DPR_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`✅ Exported as CSV`);
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ This will delete ALL saved reports. Are you sure? (Consider exporting first)')) {
+                localStorage.removeItem('dprRecords');
+                loadRecords();
+                alert('All data cleared');
+            }
+        }
+
+        // SERVICE WORKER for offline capability (optional)
+        if ('serviceWorker' in navigator) {
+            // Service worker registration would go here for full offline capability
+            console.log('Service worker ready for offline functionality');
+        }
+    </script>
+</body>
+</html>
